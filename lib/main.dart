@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:transport_trackers/models/expense.dart';
+import 'package:transport_trackers/widgets/expenses_list.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -35,6 +38,28 @@ class _MainScreenState extends State<MainScreen> {
 
   DateTime? travelDate;
 
+  List <Expenses> myExpenses = []; /* creating a list for expenses */
+
+  void removedItem(i) {
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: Text('confirmation'),
+        content: Text('Are you sure you want to delete?'),
+        actions: [
+          TextButton(onPressed: (){
+            setState(() {
+              myExpenses.removeAt(i);
+            });
+            Navigator.of(context).pop();
+          }, child: Text('yes')),
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: Text('No')),
+        ],
+      );
+    });
+  }
+
   void datePicker(BuildContext context ){
     showDatePicker(
         context: context,
@@ -61,6 +86,8 @@ class _MainScreenState extends State<MainScreen> {
       print(mode);
       print(cost!.toStringAsFixed(2));
       print(DateFormat('dd/MM/yyyy').format(travelDate!));
+
+      myExpenses.insert(0, Expenses(purpose: purpose!, mode: mode! ,cost: cost!, travelDate: travelDate!));
       
       FocusScope.of(context).unfocus();
 
@@ -76,6 +103,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('Transport Expreses Trackers'),
         actions: [
@@ -144,6 +172,20 @@ class _MainScreenState extends State<MainScreen> {
                     onPressed: () {datePicker(context);},
                   )
                 ],
+              ),
+              Expanded(
+                child: myExpenses.length > 0 ?Container(
+                  height: 200,
+                  child: expensesList(myExpenses,removedItem),
+                ):
+                    Column(
+                      children: [
+                        SizedBox(height: 20),
+                        Image.asset('image_asset/file.png',width: 300),
+                        Text('No expenses yet, add a new one today!', style:
+                          Theme.of(context).textTheme.subtitle1,)
+                      ],
+                    )
               )
             ],
           ),
