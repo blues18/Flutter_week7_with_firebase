@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:transport_trackers/models/expense.dart';
+import 'package:transport_trackers/provider/all_expenses.dart';
 import 'package:transport_trackers/widgets/expenses_list.dart';
+
+import 'screen/add_expense_screen.dart';
+import 'screen/expense_ListScreen.dart';
+import 'widgets/app_drawer.dart';
 
 
 void main() {
@@ -12,22 +18,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<Allexpenses>(
+          create: (ctx) => Allexpenses(),
+        ),
+      ],
+      child: MaterialApp(
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: MainScreen(),
+        routes: {
+          addexpenseScreen.routeName : (_) {return addexpenseScreen();},
+          expensesListScreen.routeName : (_) {return expensesListScreen();},
+        }
       ),
-      home: MainScreen(),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
+  static String routeName = '/';
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
+
+
   var form =GlobalKey<FormState>();
 
   String? purpose;
@@ -40,25 +60,6 @@ class _MainScreenState extends State<MainScreen> {
 
   List <Expenses> myExpenses = []; /* creating a list for expenses */
 
-  void removedItem(i) {
-    showDialog(context: context, builder: (context){
-      return AlertDialog(
-        title: Text('confirmation'),
-        content: Text('Are you sure you want to delete?'),
-        actions: [
-          TextButton(onPressed: (){
-            setState(() {
-              myExpenses.removeAt(i);
-            });
-            Navigator.of(context).pop();
-          }, child: Text('yes')),
-          TextButton(onPressed: (){
-            Navigator.of(context).pop();
-          }, child: Text('No')),
-        ],
-      );
-    });
-  }
 
   void datePicker(BuildContext context ){
     showDatePicker(
@@ -88,12 +89,12 @@ class _MainScreenState extends State<MainScreen> {
       print(DateFormat('dd/MM/yyyy').format(travelDate!));
 
       myExpenses.insert(0, Expenses(purpose: purpose!, mode: mode! ,cost: cost!, travelDate: travelDate!));
-      
+
       FocusScope.of(context).unfocus();
 
       form.currentState!.reset();
       travelDate = null;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content:Text('Travel expense added successfully!'))
       );
@@ -102,6 +103,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Allexpenses expenseList = Provider.of<Allexpenses>(context);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -110,87 +113,14 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(onPressed: saveForm, icon: Icon(Icons.save))
         ],
       ),
-      body: Container(
-        padding: EdgeInsets.all(10),
-        child: Form(
-          key: form,
-          child: Column(
-            children: [
-              DropdownButtonFormField(
-                decoration: InputDecoration(
-                  label: Text('Mode of Transport')
-                ),
-                  items: [
-                    DropdownMenuItem(child: Text('Bus'),value: 'bus'),
-                    DropdownMenuItem(child: Text('Grab'),value: 'grab'),
-                    DropdownMenuItem(child: Text('Mrt'),value: 'mrt'),
-                    DropdownMenuItem(child: Text('Taxi'),value: 'taxi'),
-                  ],
-                  validator: (value) {
-                    if(value == null)
-                      return 'please provide a mode of transport';
-                    else
-                      return null;
-                  },
-                  onChanged: (value) {mode = value as String; }
-              ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    label: Text('cost')
-                  ),
-                  keyboardType: TextInputType.number, //Swicthing to number keyboard type
-                  validator: (value) {
-                    if (value == null)
-                      return 'please enter the Cost of transport ';
-                    else if (double.tryParse(value) == null)
-                      return 'please provide a vaild travel cost';
-                    else
-                      return null;
-                  },
-                  onSaved: (value) {cost = double.parse(value!);},
-                ),
-              TextFormField(
-                decoration: InputDecoration(
-                    label: Text('Purpose')
-                ),
-                validator: (value) {
-                  if (value == null)
-                    return 'please enter the purpose of your transport';
-                  else if (value.length < 5)
-                    return 'please enter a description that is at least 5 letters long.';
-                  else
-                    return null;
-                },
-                onSaved: (value) {purpose = value as String;},
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(travelDate==null? 'No Date chosen': 'Picked Date ' + DateFormat('dd/MM/yyyy').format(travelDate!)),//converting stateless widget to stateful
-                  TextButton(
-                    child: Text('Choose Date', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () {datePicker(context);},
-                  )
-                ],
-              ),
-              Expanded(
-                child: myExpenses.length > 0 ?Container(
-                  height: 200,
-                  child: expensesList(myExpenses,removedItem),
-                ):
-                    Column(
-                      children: [
-                        SizedBox(height: 20),
-                        Image.asset('image_asset/file.png',width: 300),
-                        Text('No expenses yet, add a new one today!', style:
-                          Theme.of(context).textTheme.subtitle1,)
-                      ],
-                    )
-              )
-            ],
-          ),
-        ),
+      body: Column(
+        children: [
+          Image.asset('image_asset/creditcard.png'),
+          Text('Total spent: \$' + expenseList.getTotalSpendings().toStringAsFixed(2),
+            style: Theme.of(context).textTheme.titleLarge,)
+        ],
       ),
+      drawer: app_drawer(),
     );
   }
 }
