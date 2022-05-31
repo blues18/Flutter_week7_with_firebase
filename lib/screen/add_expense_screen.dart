@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transport_trackers/provider/all_expenses.dart';
 import 'package:intl/intl.dart';
 import 'package:transport_trackers/widgets/expenses_list.dart';
+
+import '../service/firestore_service.dart';
 
 class addexpenseScreen extends StatefulWidget {
   static String routeName ='/add-expense';
@@ -19,7 +20,7 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
   double? cost;
   DateTime? travelDate;
 
-  void saveForm(Allexpenses expensesList) {
+  void saveForm() {
 
     bool isValid = form.currentState!.validate();
 
@@ -30,15 +31,18 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
       print(purpose);
       print(mode);
       print(cost!.toStringAsFixed(2));
-      print(DateFormat('dd/MM/yyyy').format(travelDate!));
 
-      expensesList.addExpense(purpose,mode,cost,travelDate);
+      FirestoreService fsService = FirestoreService();
+      fsService.addExpense(purpose, mode, cost,travelDate);
 
+      //hiding keyboard
       FocusScope.of(context).unfocus();
 
+      //reset the form
       form.currentState!.reset();
       travelDate = null;
 
+      //snackbar
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content:Text('Travel expense added successfully!'))
       );
@@ -58,13 +62,12 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Allexpenses allexpenses = Provider.of<Allexpenses>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Add expense'),
         actions: [
-          IconButton(onPressed:() { saveForm(allexpenses);}, icon: Icon(Icons.save))
+          IconButton(onPressed:() { saveForm();}, icon: Icon(Icons.save))
         ],
       ),
       body:Container(
