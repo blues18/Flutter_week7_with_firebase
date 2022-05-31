@@ -46,35 +46,37 @@ class _MainScreenState extends State<MainScreen> {
     FirestoreService fsService = FirestoreService();
 
     return StreamBuilder<List<Expenses>>(
-        stream: fsService.getExpenses(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
-            return Center(child: CircularProgressIndicator());
-          else {
-            double sum = 0;
-            snapshot.data!.forEach((doc) {
-              sum += doc.cost;
-            });
-            Scaffold(
-              resizeToAvoidBottomInset: false,
-              appBar: AppBar(
-                title: Text('Transport Expreses Trackers'),
-              ),
-              body: Column(
-                children: [
-                  Image.asset('image_asset/creditcard.png'),
-                  Text('Total spent: \$' + sum.toStringAsFixed(2),
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .titleLarge,)
-                ],
-              ),
-              drawer: app_drawer(),
-            );
-          }
+      stream: fsService.getExpenses(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return Center(child: CircularProgressIndicator());
+        else {
+          double sum = 0;
+          snapshot.data!.forEach((doc) {
+            sum += doc.cost;
+          });
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            appBar: AppBar(
+              title: Text('Transport Expreses Trackers'),
+            ),
+            body: Column(
+              children: [
+                Image.asset('image_asset/creditcard.png'),
+                Text('Total spent: \$' + sum.toStringAsFixed(2),
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .titleLarge,)
+              ],
+            ),
+            drawer: app_drawer(),
+          );
         }
+      }
     );
   }
 }
+
+
 
