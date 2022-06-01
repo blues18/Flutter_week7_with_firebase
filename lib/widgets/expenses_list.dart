@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transport_trackers/models/expense.dart';
+import 'package:transport_trackers/screen/edit_expense_screen.dart';
 
 import '../service/firestore_service.dart';
 
@@ -55,6 +56,8 @@ class _ExpensesListState extends State<ExpensesList> {
                       removeItem(snapshot.data![i].id);
                     },
                   ),
+                  onTap: () => Navigator.pushNamed(context,
+                  EditexpenseScreen.routeName, arguments: snapshot.data![i]),
                 );
               },
 

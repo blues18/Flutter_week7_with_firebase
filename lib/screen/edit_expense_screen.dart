@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:transport_trackers/models/expense.dart';
 import 'package:transport_trackers/widgets/expenses_list.dart';
 
 import '../service/firestore_service.dart';
 
-class addexpenseScreen extends StatefulWidget {
-  static String routeName ='/add-expense';
+class EditexpenseScreen extends StatefulWidget {
+  static String routeName ='/edit-expense';
 
   @override
-  State<addexpenseScreen> createState() => _addexpenseScreenState();
+  State<EditexpenseScreen> createState() => _EditexpenseScreenState();
 }
 
-class _addexpenseScreenState extends State<addexpenseScreen> {
+class _EditexpenseScreenState extends State<EditexpenseScreen> {
   var form = GlobalKey<FormState>();
 
   String? purpose;
@@ -20,43 +20,41 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
   double? cost;
   DateTime? travelDate;
 
-  void saveForm() {
-
+  void saveForm(String id) {
     bool isValid = form.currentState!.validate();
 
     if (isValid) {
       form.currentState!.save();
-      if (travelDate == null)travelDate =DateTime.now();
+      if(travelDate == null)travelDate =DateTime.now();
 
       print(purpose);
       print(mode);
       print(cost!.toStringAsFixed(2));
 
       FirestoreService fsService = FirestoreService();
-      fsService.addExpense(purpose, mode, cost,travelDate);
-
+      fsService.editExpense(id, purpose, mode, cost, travelDate);
       //hiding keyboard
       FocusScope.of(context).unfocus();
 
       //reset the form
-      form.currentState!.reset();
-      travelDate = null;
+      /*form.currentState!.reset();
+      travelDate = null;*/
 
       //snackbar
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content:Text('Travel expense added successfully!'))
+          SnackBar(content:Text('Travel expense Update successfully!'),)
       );
+      Navigator.of(context).pop();
     }
   }
-
   void presentDatePicker(BuildContext context) {
-    showDatePicker(
-      context: context,
+    showDatePicker(context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now().subtract(Duration(days: 14)),
       lastDate: DateTime.now(),
     ).then((value) {
-      if (value == null) return;
+      if (value==null) return;
+
       setState(() {
         travelDate = value;
       });
@@ -65,12 +63,17 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Expenses selectedExpense = ModalRoute.of(context)?.settings.arguments as
+    Expenses;
+      travelDate = selectedExpense.travelDate;
+
+      if(travelDate == null)travelDate = selectedExpense.travelDate;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add expense'),
+        title: Text('edit expense'),
         actions: [
-          IconButton(onPressed:() { saveForm();}, icon: Icon(Icons.save))
+          IconButton(onPressed:() { saveForm(selectedExpense.id);}, icon: Icon(Icons.save))
         ],
       ),
       body:Container(
@@ -80,6 +83,7 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
           child: Column(
             children: [
               DropdownButtonFormField(
+                value: selectedExpense.mode,
                   decoration: InputDecoration(
                       label: Text('Mode of Transport')
                   ),
@@ -95,9 +99,11 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
                     else
                       return null;
                   },
-                  onChanged: (value) {mode = value as String; }
+                  onChanged: (value) {mode = value as String; },
+                  onSaved: (value) {mode =value as String; },
               ),
               TextFormField(
+                initialValue: selectedExpense.cost.toStringAsFixed(2),
                 decoration: InputDecoration(
                     label: Text('cost')
                 ),
@@ -113,6 +119,7 @@ class _addexpenseScreenState extends State<addexpenseScreen> {
                 onSaved: (value) {cost = double.parse(value!);},
               ),
               TextFormField(
+                initialValue: selectedExpense.purpose,
                 decoration: InputDecoration(
                     label: Text('Purpose')
                 ),

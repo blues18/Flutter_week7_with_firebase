@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:transport_trackers/models/expense.dart';
+import 'package:transport_trackers/screen/edit_expense_screen.dart';
 import 'package:transport_trackers/service/firestore_service.dart';
 
 import 'screen/add_expense_screen.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
       routes: {
         addexpenseScreen.routeName : (_) {return addexpenseScreen();},
         expensesListScreen.routeName : (_) {return expensesListScreen();},
+        EditexpenseScreen.routeName : (_) {return EditexpenseScreen();},
         }
       ),
     );
